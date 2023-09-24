@@ -51,11 +51,11 @@ class SingleRequestPropertySerializer(serializers.ModelSerializer):
 
 
 class PropertyProfileSerializer(serializers.ModelSerializer):
-    vendor = VendorSerializer()  # Use the VendorSerializer for the vendor field
+    vendor = VendorSerializer() 
     
     class Meta:
         model = Property
-        fields = '__all__'  # Include all fields of the Property model
+        fields = '__all__'  #
 
 
 

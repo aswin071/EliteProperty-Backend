@@ -11,66 +11,85 @@ from django.conf import settings
 from accounts.models import Account
 from property.models import Property
 from datetime import datetime
+from superadmin.models import AdminPayment
 import json
+from datetime import date
+from .signals import my_signal
+from django.core.mail import send_mail
+from django.dispatch import receiver
 
 
 class InitiatePaymentView(APIView):
     
     permission_classes = [IsAuthenticated]
 
-   
     def post(self, request):
-       
-        current_user = request.user
-        user = Account.objects.get(email=current_user)
-
-        
-        property_id = request.data.get('property_id')
-        deposit_amount = request.data.get('deposit_amount')
-        amount_in_paise = int(float(deposit_amount) * 100)
-
-        
-        RAZORPAY_KEY_ID = settings.RAZORPAY_KEY_ID
-        RAZORPAY_KEY_SECRET = settings.RAZORPAY_KEY_SECRET
-        
-        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-
         try:
-         
+            current_user = request.user
+            user = Account.objects.get(email=current_user)
+
+            property_id = request.data.get('property_id')
+            deposit_amount = request.data.get('deposit_amount')
+            amount_in_paise = int(float(deposit_amount) * 100)
+            commission_amount = int(float(deposit_amount))
+
+            print(f"Property ID: {property_id}")
+            print(f"Deposit Amount: {deposit_amount}")
+            print(f"Amount in Paise: {amount_in_paise}")
+            print(f"Commission Amount: {commission_amount}")
+
+            RAZORPAY_KEY_ID = settings.RAZORPAY_KEY_ID
+            RAZORPAY_KEY_SECRET = settings.RAZORPAY_KEY_SECRET
+            
+            print(f"Razorpay Key ID: {RAZORPAY_KEY_ID}")
+            print(f"Razorpay Key Secret: {RAZORPAY_KEY_SECRET}")
+
+            client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
+            # Convert 15% to admin_fee
+            admin_fee = (0.15 * amount_in_paise) / 100
+            deducted_amount = commission_amount - admin_fee 
+
+            print(f"Admin Fee: {admin_fee}")
+            print(f"Deducted Amount: {deducted_amount}")
+
             order_response = client.order.create({
-                'amount': amount_in_paise, 
+                'amount': amount_in_paise,
                 'currency': 'INR',
-                'payment_capture': 1,  
+                'payment_capture': 1,
             })
             order_id = order_response["id"]
-        
+
+            print(f"Order ID: {order_id}")
+
             order = PropertyBooking.objects.create(
                 user=user,
                 booking_order_id=order_id,
                 booking_date=datetime.now().date(),
-                property_id=property_id, 
-                deposit_amount=deposit_amount
-
+                property_id=property_id,
+                deposit_amount=deducted_amount
             )
 
-           
+            # Creating a new instance in the AdminPayment model
+            
+            admin_payment = AdminPayment.objects.create(
+                vendor=user,
+                property_id=property_id,  # Note: You should specify the property here
+                amount=admin_fee,
+                date=date.today(),
+            )
+
             serializer = PropertyBookingSerializer(order)
             data = {"order_response": order_response, "order": serializer.data}
             return Response(data)
         except Account.DoesNotExist:
-            return Response(
-                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
         except Property.DoesNotExist:
-            return Response(
-                {"error": "Car not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+            return Response({"error": "Property not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-    
+            print(f"Error: {str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
@@ -218,6 +237,7 @@ class InitiateRentPaymentView(APIView):
             print(f"Check-out Date: {check_out_date}")
 
             amount_in_paise = int(float(rent_amount) * 100)
+            commission_amount=int(float(rent_amount))
 
             RAZORPAY_KEY_ID = settings.RAZORPAY_KEY_ID
             RAZORPAY_KEY_SECRET = settings.RAZORPAY_KEY_SECRET
@@ -226,6 +246,13 @@ class InitiateRentPaymentView(APIView):
             print(f"Razorpay Key Secret: {RAZORPAY_KEY_SECRET}")
 
             client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+            
+            
+            # Convert 15% to admin_fee
+            admin_fee = (0.15 * amount_in_paise) / 100
+            deducted_amount = commission_amount - admin_fee  # Adjust for paise
+
+            
 
             order_response = client.order.create({
                 'amount': amount_in_paise,
@@ -243,9 +270,18 @@ class InitiateRentPaymentView(APIView):
                 booking_order_id=order_id,
                 booking_date=datetime.now().date(),
                 property=property,
-                rent_amount=rent_amount,
+                rent_amount=deducted_amount,
                 check_in_date=check_in_date,
                 check_out_date=check_out_date,
+            )
+
+            #creating new instance to adminpayment model
+            
+            admin_payment = AdminPayment.objects.create(
+                vendor=user,
+                property=property,
+                amount=admin_fee,
+                date=date.today(),
             )
 
             serializer = PropertyBookingSerializer(order)
@@ -327,3 +363,32 @@ class SuccessRentPaymentView(APIView):
                 {"error": "Payment verification failed."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+
+@receiver(my_signal)
+def send_real_estate_notification(sender, booking, **kwargs):
+    # Define the URLs and email subjects/messages
+    user_redirect = "http://localhost:3000/my-bookings"
+    user_subject = "Booking Confirmation"
+    user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed.\n\nYou can view and manage your booking by visiting the following link: <a href="{user_redirect}">Booking Management Portal</a>.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
+
+    admin_redirect = "https://your-real-estate-admin.com/dashboard"
+    admin_subject = "New Booking Received"
+    admin_message = f'Hello,\n\nA new booking for property {booking.property.title} has been received.\n\nYou can review and manage this booking by visiting the following link: <a href="{admin_redirect}">Admin Dashboard</a>.\n\nIf you have any questions, please get in touch.\n\nBest regards,\nYour Real Estate Team'
+
+    # Send messages to user and admin
+    send_mail(
+        user_subject,
+        "",
+        settings.DEFAULT_FROM_EMAIL,
+        [booking.user.email],
+        html_message=user_message,
+    )
+    send_mail(
+        admin_subject,
+        "",
+        settings.DEFAULT_FROM_EMAIL,
+        [settings.ADMIN_EMAIL],  # Replace with your admin email
+        html_message=admin_message,
+    )

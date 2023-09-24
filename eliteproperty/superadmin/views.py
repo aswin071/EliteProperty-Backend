@@ -8,6 +8,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from vendor.models import VendorProfile
 from property.models import Property
 from property.serializers import AllPropertySerializer
+from .models import AdminPayment
+from .serializers import AdminPaymentSerializer
 # Create your views here.
 
 class VendorRegistrationApprovalView(APIView):
@@ -73,4 +75,15 @@ class PublishUnpublishProperty(APIView):
         except Property.DoesNotExist:
             
             return Response({"message": "Property not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class AdminTransactionDetails(APIView):
+
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        # Fetch all property data
+        transaction_details = AdminPayment.objects.all()
+        # Serialize the property data using your serializer (PropertySerializer)
+        serializer = AdminPaymentSerializer(transaction_details, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 

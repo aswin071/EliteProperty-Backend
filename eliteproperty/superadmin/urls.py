@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import (VendorRegistrationApprovalView,BlockUnblockUserView,PublishUnpublishProperty)
+from .views import (VendorRegistrationApprovalView,BlockUnblockUserView,PublishUnpublishProperty,
+AdminTransactionDetails)
 
 urlpatterns = [
    path("block-unblock-user/<int:user_id>/", BlockUnblockUserView.as_view(), name="block-unblock-user"),
@@ -7,4 +8,5 @@ urlpatterns = [
    path('vendor/approve/<int:vendor_id>/', VendorRegistrationApprovalView.as_view(), name='approve-registration'),
    path("properties/", PublishUnpublishProperty.as_view(), name="approve-property"),
    path("property/approve/<int:prop_id>/", PublishUnpublishProperty.as_view(), name="approve-property"),
+   path("commission-view/", AdminTransactionDetails.as_view(), name="approve-property"),
 ]

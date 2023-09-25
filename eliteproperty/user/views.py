@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from accounts.models import Account
+import pdfkit
+from django.template.loader import render_to_string
 from .models import UserProfile
 from .serializers import UserProfileSerializer, UserProfileListSerializer
 from property.models import Property
@@ -192,4 +194,24 @@ class GetUserProperties(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-        
+
+
+class GeneratePDFView(APIView):
+    def get(self, request, property_id):
+        # Get property details based on property_id
+        property = get_object_or_404(Interest, id=property_id)
+
+        # Serialize property data using your serializer
+        property_data = InterestPropertySerializer(property).data
+
+        # Render HTML template with serialized property data
+        html_template = render_to_string('property_details.html', {'property': property_data})
+
+        # Generate PDF from HTML using pdfkit
+        pdf = pdfkit.from_string(html_template, False)
+
+        # Create a response with PDF content
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="property_details.pdf"'
+
+        return response

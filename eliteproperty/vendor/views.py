@@ -127,6 +127,10 @@ class PropertyInquiriesView(APIView):
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
+
+
 class UpdatePropertyStatusView(APIView):
     permission_classes=[IsAuthenticated]
     def put(self, request, property_id):
@@ -158,3 +162,5 @@ class VendorPropertyBookingListView(APIView):
         bookings = PropertyBooking.objects.filter(property__vendor=vendor)
         serializer = PropertyTransactionSerializer(bookings, many=True)
         return Response(serializer.data)
+
+

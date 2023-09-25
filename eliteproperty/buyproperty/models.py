@@ -58,7 +58,7 @@ class PropertyBooking(models.Model):
         ("cancelled", "Cancelled"),
     )
     
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="complete")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     booking_payment_id = models.CharField(max_length=100)
     booking_order_id = models.CharField(max_length=100)
     is_paid = models.BooleanField(default=False)
@@ -81,7 +81,7 @@ class RentPropertyBooking(models.Model):
         ("cancelled", "Cancelled"),
     )
     
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="complete")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     booking_payment_id = models.CharField(max_length=100)
     booking_order_id = models.CharField(max_length=100)
     is_paid = models.BooleanField(default=False)

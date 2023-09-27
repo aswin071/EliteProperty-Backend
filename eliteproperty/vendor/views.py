@@ -15,8 +15,8 @@ from user.models import UserProfile
 from property.models import Property
 from user.serializers import UserProfileListSerializer
 from buyproperty.serializers import InterestSerializer
-from buyproperty.models import Interest
-from buyproperty.serializers import PropertyBookingSerializer,PropertyTransactionSerializer
+from buyproperty.models import Interest,RentPropertyBooking
+from buyproperty.serializers import PropertyBookingSerializer,PropertyTransactionSerializer,RentBookingSerializer,RentPropertyBookingSerializer,RentPropertyHistorySerializer
 from buyproperty.models import PropertyBooking
 # Create your views here.
 
@@ -161,6 +161,16 @@ class VendorPropertyBookingListView(APIView):
         vendor = self.request.user 
         bookings = PropertyBooking.objects.filter(property__vendor=vendor)
         serializer = PropertyTransactionSerializer(bookings, many=True)
+        return Response(serializer.data)
+
+class UserRentBookingVendorSide(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+       
+        vendor = self.request.user 
+        bookings = RentPropertyBooking.objects.filter(property__vendor=vendor)
+        serializer = RentPropertyHistorySerializer(bookings, many=True)
         return Response(serializer.data)
 
 

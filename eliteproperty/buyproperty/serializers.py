@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Interest,Order,PropertyBooking,RentBooking
+from .models import Interest,Order,PropertyBooking,RentBooking,RentPropertyBooking
 from accounts.serializers import UserViewSerializer
 from user.serializers import UserProfileListSerializer,UserProfileSerializer,AllPropertySerializer
 from property.serializers import AllPropertySerializer,SinglePropertySerializer
@@ -80,6 +80,37 @@ class RentForBookingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+class RentPropertyBookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RentPropertyBooking
+        fields = '__all__'
+
+class RentPropertyHistorySerializer(serializers.ModelSerializer):
+    user_details = serializers.SerializerMethodField()
+    property_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RentPropertyBooking
+        fields = '__all__'
+
+    def get_user_details(self, obj):
+        user = obj.user
+        return {
+            'user_id': user.id,
+            'username': user.username,
+            'email': user.email,
+            
+        }
+
+    def get_property_details(self, obj):
+        property = obj.property
+        return {
+            'property_id': property.id,
+            'property_title': property.title,
+            'property_description': property.description,
+            
+        }
 
 
 

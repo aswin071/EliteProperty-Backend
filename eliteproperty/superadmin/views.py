@@ -56,9 +56,9 @@ class PublishUnpublishProperty(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Fetch all property data
+       
         properties = Property.objects.all()
-        # Serialize the property data using your serializer (PropertySerializer)
+       
         serializer = AllPropertySerializer(properties, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -14,7 +14,7 @@ from property.serializers import RequestedPropertyUserSerializer,AllPropertySeri
 from user.models import UserProfile
 from property.models import Property
 from user.serializers import UserProfileListSerializer
-from buyproperty.serializers import InterestSerializer
+from buyproperty.serializers import InterestSerializer,RentPropertyUpdateBookingSerializer
 from buyproperty.models import Interest,RentPropertyBooking
 from buyproperty.serializers import PropertyBookingSerializer,PropertyTransactionSerializer,RentBookingSerializer,RentPropertyBookingSerializer,RentPropertyHistorySerializer
 from buyproperty.models import PropertyBooking
@@ -134,21 +134,16 @@ class PropertyInquiriesView(APIView):
 class UpdatePropertyStatusView(APIView):
     permission_classes=[IsAuthenticated]
     def put(self, request, property_id):
-        # Get the property instance
         property_instance = get_object_or_404(Property, pk=property_id)
 
-        # Check if the user making the request is the vendor associated with the property
         if request.user == property_instance.vendor:
-            # Get the new status from the request data (assuming you send it as JSON)
             new_status = request.data.get('status')
 
-            # Update the property status
             property_instance.status = new_status
             property_instance.save()
 
             return Response({'message': 'Property status updated successfully.'})
 
-        # If the user making the request is not the vendor, return an error
         return Response({'error': 'You are not authorized to update the property status.'}, status=403)
    
 
@@ -173,4 +168,23 @@ class UserRentBookingVendorSide(APIView):
         serializer = RentPropertyHistorySerializer(bookings, many=True)
         return Response(serializer.data)
 
+
+
+class UpdatePaymentStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, booking_id):
+        print('ID:', booking_id)
+        property_instance = get_object_or_404(RentPropertyBooking, pk=booking_id)
+
+        new_status = request.data.get('status')
+        print(new_status)
+
+        if new_status in dict(RentPropertyBooking.STATUS_CHOICES):
+            property_instance.status = new_status
+            property_instance.save()
+            print('yes')
+            return Response({'message': 'Property payment status updated successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid status choice.'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -112,6 +112,10 @@ class RentPropertyHistorySerializer(serializers.ModelSerializer):
             
         }
 
+class RentPropertyUpdateBookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RentPropertyBooking
+        fields = ['status']
 
 
 

@@ -14,7 +14,7 @@ class VendorSerializer(serializers.ModelSerializer):
 class VendorProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model=VendorProfile
-        exclude = ('vendor',)
+        
 
 class VendorProfileListSerializer(serializers.ModelSerializer):
     vendor=VendorSerializer()

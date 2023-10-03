@@ -23,10 +23,10 @@ from buyproperty.models import PropertyBooking
 
 class VendorProfileView(APIView):
     permission_classes = [IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)
 
     def get(self, request, *args, **kwargs):
         try:
+           
             profile = VendorProfile.objects.get(vendor=request.user)
             serializer = VendorProfileSerializer(profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -66,6 +66,17 @@ class VendorProfileView(APIView):
            
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class AuthenticatedVendorProfile(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = VendorProfile.objects.get(vendor=request.user)
+            serializer = VendorProfileListSerializer(profile)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except VendorProfile.DoesNotExist:
+            return Response({'message': 'vendor profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 class VendorProfileListView(APIView):
     permission_classes=[IsAuthenticated]
@@ -91,7 +102,7 @@ class PropertyInquiriesView(APIView):
     permission_classes=[IsAuthenticated]
 
     def get(self, request, property_id):
-        # Filter interests based on the property
+        
         interests = Interest.objects.filter(property_id=property_id)
 
         # Serialize the interests to include user details

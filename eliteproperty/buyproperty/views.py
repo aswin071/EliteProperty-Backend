@@ -1,8 +1,9 @@
-# Import necessary modules
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from decouple import config
 import razorpay
 from .models import Order,PropertyBooking,RentBooking,Interest,RentPropertyBooking
 from .serializers import OrderSerializer,PropertyBookingSerializer,RentBookingSerializer
@@ -148,6 +149,8 @@ class SuccessPaymentView(APIView):
                 order.booking_payment_id = payment_id
                 order.is_paid = True
                 order.save()
+
+                send_real_estate_notification(sender=PropertyBooking, booking=order)
 
                 res_data = {"message": "Payment successfully received!", "order_id": ord_id}
                 return Response(res_data)
@@ -350,6 +353,9 @@ class SuccessRentPaymentView(APIView):
                 order.is_paid = True
                 order.save()
 
+                send_real_estate_notification_for_rentproperty(sender=RentPropertyBooking, booking=order)
+
+
                 res_data = {"message": "Payment successfully received!", "order_id": ord_id}
                 return Response(res_data)
             except (RentPropertyBooking.DoesNotExist, RentBooking.DoesNotExist) as e:
@@ -369,26 +375,46 @@ class SuccessRentPaymentView(APIView):
 @receiver(my_signal)
 def send_real_estate_notification(sender, booking, **kwargs):
     # Define the URLs and email subjects/messages
-    user_redirect = "http://localhost:3000/my-bookings"
+    user_redirect = "http://localhost:3000/my-bookings"  # Replace with your actual URL
     user_subject = "Booking Confirmation"
-    user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed.\n\nYou can view and manage your booking by visiting the following link: <a href="{user_redirect}">Booking Management Portal</a>.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
+    user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed.\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 
-    admin_redirect = "https://your-real-estate-admin.com/dashboard"
-    admin_subject = "New Booking Received"
-    admin_message = f'Hello,\n\nA new booking for property {booking.property.title} has been received.\n\nYou can review and manage this booking by visiting the following link: <a href="{admin_redirect}">Admin Dashboard</a>.\n\nIf you have any questions, please get in touch.\n\nBest regards,\nYour Real Estate Team'
-
-    # Send messages to user and admin
+    # Send an email to the user
     send_mail(
         user_subject,
-        "",
-        settings.DEFAULT_FROM_EMAIL,
+        user_message,
+        config('EMAIL_HOST_USER'),  
         [booking.user.email],
-        html_message=user_message,
-    )
+        fail_silently=False,  )
+
+
+@receiver(my_signal)
+def send_real_estate_notification_for_rentproperty(sender, booking, **kwargs):
+    # Define the URLs and email subjects/messages
+    user_redirect = "http://localhost:3000/my-bookings"  # Replace with your actual URL
+    user_subject = "Booking Confirmation"
+    user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed for the following dates:\n\nCheck-In Date: {booking.check_in_date}\nCheck-Out Date: {booking.check_out_date}\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
+
+    # Send an email to the user
     send_mail(
-        admin_subject,
-        "",
-        settings.DEFAULT_FROM_EMAIL,
-        [settings.ADMIN_EMAIL],  # Replace with your admin email
-        html_message=admin_message,
-    )
+        user_subject,
+        user_message,
+        config('EMAIL_HOST_USER'),  
+        [booking.user.email],
+        fail_silently=False,  )
+
+
+@receiver(my_signal)
+def send_vendor_notification(sender, booking, **kwargs):
+    # Define the URLs and email subjects/messages
+    user_redirect = "http://localhost:3000/my-bookings"  # Replace with your actual URL
+    user_subject = "Booking Confirmation"
+    user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed for the following dates:\n\nCheck-In Date: {booking.check_in_date}\nCheck-Out Date: {booking.check_out_date}\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
+
+    # Send an email to the user
+    send_mail(
+        user_subject,
+        user_message,
+        config('EMAIL_HOST_USER'),  
+        [booking.user.email],
+        fail_silently=False,  )

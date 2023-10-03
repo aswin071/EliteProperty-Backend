@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (VendorProfileView,VendorProfileListView,VendorHomeView,PropertyInquiriesView,UpdatePropertyStatusView,VendorPropertyBookingListView,
-                        UserRentBookingVendorSide,UpdatePaymentStatusView)
+                        UserRentBookingVendorSide,UpdateRentPaymentStatusView,UpdateSalePaymentStatusView)
 
 urlpatterns = [
     path('vendor-createprofile/', VendorProfileView.as_view(), name='create-vendor-profile'),
@@ -12,5 +12,7 @@ urlpatterns = [
     path('update-status/<int:property_id>/', UpdatePropertyStatusView.as_view(), name='update_property_status'),
     path('property-bookings/', VendorPropertyBookingListView.as_view(), name='vendor-property-bookings'),
     path('rent/property-bookings/', UserRentBookingVendorSide.as_view(), name='vendor-property-bookings'),
-    path('update-payment-status/<int:booking_id>/', UpdatePaymentStatusView.as_view(), name='update-payment-status'),
+    path('update-payment-status/<int:booking_id>/', UpdateRentPaymentStatusView.as_view(), name='update-payment-status'),
+    path('update-sale/payment-status/<int:booking_id>/', UpdateSalePaymentStatusView.as_view(), name='update-payment-status'),
+
 ]

@@ -170,10 +170,10 @@ class UserRentBookingVendorSide(APIView):
 
 
 
-class UpdatePaymentStatusView(APIView):
+class UpdateRentPaymentStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def put(self, request, booking_id):
+    def patch(self, request, booking_id):
         print('ID:', booking_id)
         property_instance = get_object_or_404(RentPropertyBooking, pk=booking_id)
 
@@ -187,4 +187,24 @@ class UpdatePaymentStatusView(APIView):
             return Response({'message': 'Property payment status updated successfully.'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid status choice.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateSalePaymentStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, booking_id):
+        print('ID:', booking_id)
+        property_instance = get_object_or_404(PropertyBooking, pk=booking_id)
+
+        new_status = request.data.get('status')
+        print(new_status)
+
+        if new_status in dict(PropertyBooking.STATUS_CHOICES):
+            property_instance.status = new_status
+            property_instance.save()
+            print('yes')
+            return Response({'message': 'Property payment status updated successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid status choice.'}, status=status.HTTP_400_BAD_REQUEST)
+
 

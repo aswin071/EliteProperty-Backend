@@ -11,7 +11,7 @@ from .serializers import UserProfileSerializer, UserProfileListSerializer
 from property.models import Property
 from property.serializers import AllPropertySerializer,PropertyProfileSerializer,SingleRequestPropertySerializer,SinglePropertySerializer
 from buyproperty.models import Interest,PropertyBooking
-from buyproperty.serializers import interestModelSerializer,InterestPropertySerializer,RentForBookingSerializer,RentBookingSerializer,RentPropertyBookingSerializer,PropertyBookingSerializer
+from buyproperty.serializers import interestModelSerializer,InterestPropertySerializer,RentForBookingSerializer,RentBookingSerializer,RentPropertyBookingSerializer,PropertyBookingSerializer,PropertyTransactionSerializer
 from buyproperty.models import RentBooking,RentPropertyBooking
 from django.shortcuts import get_object_or_404
 # Create your views here.
@@ -350,22 +350,27 @@ class GetUserBookings(APIView):
 
 
 
-class GeneratePDFView(APIView):
-    def get(self, request, property_id):
+class UserSaleBookings(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self,request):
+        user = request.user
+        user_bookings=PropertyBooking.objects.filter(user=user)
+        booking_serializer = PropertyBookingSerializer(user_bookings, many=True)
+
+        property_ids = [booking['property'] for booking in booking_serializer.data]
         
-        property = get_object_or_404(Interest, id=property_id)
-
-       
-        property_data = InterestPropertySerializer(property).data
-
-       
-        html_template = render_to_string('property_details.html', {'property': property_data})
-
         
-        pdf = pdfkit.from_string(html_template, False)
-
+        properties = Property.objects.filter(id__in=property_ids)
+        property_serializer = SinglePropertySerializer(properties, many=True)
         
-        response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="property_details.pdf"'
-
-        return response
+        
+        combined_data = [
+            {
+                'userbooking': booking,
+                'property': property
+            }
+            for booking, property in zip(booking_serializer.data, property_serializer.data)
+        ]
+        
+        return Response(combined_data, status=status.HTTP_200_OK)

@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (UserProfileView, UserProfileListView,PropertyListView,AuthenticatedUserProfile,
                         BookingRequestView,GetUserPropertyBookings,PropertyPaymentDetails,CheckoutForRentProperty,GetUserBookings,
-                        GeneratePDFView,PropertyDetailsProfileView)
+                        PropertyDetailsProfileView,UserSaleBookings)
 
 urlpatterns = [
     path('user-createprofile/', UserProfileView.as_view(), name='create-user-profile'),
@@ -14,6 +14,6 @@ urlpatterns = [
     path('book/property/<int:property_id>/', PropertyPaymentDetails.as_view(), name='property-payment-details'),
     path('rent/book/property/<int:property_id>/', CheckoutForRentProperty.as_view(), name='property-payment-details'),
     path('user-properties/', GetUserBookings.as_view(), name='user-properties'),
-    path('generate_pdf/<int:property_id>/',GeneratePDFView.as_view(), name='generate_pdf'),
+    path('user-sale/bookings/', UserSaleBookings.as_view(), name='user-properties'),
 
 ]

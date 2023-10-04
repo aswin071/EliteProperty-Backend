@@ -8,6 +8,13 @@ class AdminPaymentSerializer(serializers.ModelSerializer):
         model = AdminPayment
         fields = ('id', 'vendor', 'property', 'amount', 'date')
 
+class AdminPaymentviewSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = AdminPayment
+        fields = '__all__'
+
+
 
 
 

@@ -18,6 +18,9 @@ from buyproperty.serializers import InterestSerializer,RentPropertyUpdateBooking
 from buyproperty.models import Interest,RentPropertyBooking
 from buyproperty.serializers import PropertyBookingSerializer,PropertyTransactionSerializer,RentBookingSerializer,RentPropertyBookingSerializer,RentPropertyHistorySerializer
 from buyproperty.models import PropertyBooking
+from django.db.models import Sum, F
+from superadmin.models import AdminPayment
+from superadmin.serializers import AdminPaymentviewSerializer
 # Create your views here.
 
 
@@ -204,18 +207,99 @@ class UpdateSalePaymentStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, booking_id):
-        print('ID:', booking_id)
         property_instance = get_object_or_404(PropertyBooking, pk=booking_id)
 
         new_status = request.data.get('status')
-        print(new_status)
 
         if new_status in dict(PropertyBooking.STATUS_CHOICES):
             property_instance.status = new_status
             property_instance.save()
-            print('yes')
             return Response({'message': 'Property payment status updated successfully.'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid status choice.'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class SaletNetAmount(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+           
+            vendor = self.request.user
+
+            
+            deposit_amounts = PropertyBooking.objects.filter(property__vendor=vendor).values_list('deposit_amount', flat=True)
+            deposit_total = sum(deposit_amounts)
+
+            
+            commission_amounts = AdminPayment.objects.filter(property__vendor=vendor).values_list('amount', flat=True)
+            commission_total = sum(commission_amounts)
+
+            
+            net_amount = deposit_total + commission_total
+
+            
+            deposit_data = PropertyBooking.objects.filter(property__vendor=vendor)
+            commission_data = AdminPayment.objects.filter(property__vendor=vendor)
+
+            deposit_serializer = PropertyTransactionSerializer(deposit_data, many=True)
+            commission_serializer = AdminPaymentviewSerializer(commission_data, many=True)
+
+            # Create the response data dictionary
+            response_data = {
+                'deposit_total': deposit_total,
+                'commission_total': commission_total,
+                'net_amount': net_amount,
+                'deposit_details': deposit_serializer.data,
+                'commission_details': commission_serializer.data,
+            }
+
+            # Return the response
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            error_message = str(e)
+            return Response({'error': error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RentNetAmount(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Get the authenticated vendor
+            vendor = self.request.user
+
+            # Calculate rent_total by summing rent_amounts for the vendor's properties
+            rent_total = RentPropertyBooking.objects.filter(property__vendor=vendor).aggregate(total_rent=Sum('rent_amount'))['total_rent'] or 0
+
+            # Calculate commission_total by summing the commission amounts for the vendor's properties
+            commission_total = AdminPayment.objects.filter(property__vendor=vendor).aggregate(total_commission=Sum('amount'))['total_commission'] or 0
+
+            # Calculate net_amount by adding rent_total and commission_total
+            net_amount = rent_total + commission_total
+
+            # Query deposit_data and commission_data
+            deposit_data = RentPropertyBooking.objects.filter(property__vendor=vendor)
+            commission_data = AdminPayment.objects.filter(property__vendor=vendor)
+
+            # Serialize deposit_data and commission_data
+            deposit_serializer = RentPropertyHistorySerializer(deposit_data, many=True)
+            commission_serializer = AdminPaymentviewSerializer(commission_data, many=True)
+
+            # Create the response data dictionary
+            response_data = {
+                'rent_total': rent_total,
+                'commission_total': commission_total,
+                'net_amount': net_amount,
+                'deposit_details': deposit_serializer.data,
+                'commission_details': commission_serializer.data,
+            }
+
+            # Return the response
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            error_message = str(e)
+            return Response({'error': error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

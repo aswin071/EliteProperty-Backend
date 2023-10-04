@@ -38,6 +38,8 @@ class PropertyBookingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+
 class PropertyTransactionSerializer(serializers.ModelSerializer):
     user_details = serializers.SerializerMethodField()
     property_details = serializers.SerializerMethodField()
@@ -89,6 +91,8 @@ class RentPropertyBookingSerializer(serializers.ModelSerializer):
 class RentPropertyHistorySerializer(serializers.ModelSerializer):
     user_details = serializers.SerializerMethodField()
     property_details = serializers.SerializerMethodField()
+    
+    
 
     class Meta:
         model = RentPropertyBooking

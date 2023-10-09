@@ -27,4 +27,5 @@ urlpatterns = [
     path("admin/",include('superadmin.urls')),
     path("property/",include('property.urls')),
     path("buyproperty/",include('buyproperty.urls')),
+    path("chats/",include('chat.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

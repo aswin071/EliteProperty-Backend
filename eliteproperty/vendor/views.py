@@ -38,36 +38,45 @@ class VendorProfileView(APIView):
 
    
     def put(self, request, *args, **kwargs):
-       
         try:
-           
             profile, created = VendorProfile.objects.get_or_create(vendor=request.user)
-            
 
-           
+            # Print for debugging
+            print(f'profile: {profile}')
+            print(f'created: {created}')
+
             user = Account.objects.get(email=request.user)
             user.is_profile = True
             user.save()
-          
+
+            # Print for debugging
+            print(f'user: {user}')
+
         except Exception as e:
-           
+            # Print the exception for debugging
+            print(f'Exception: {e}')
             return Response({'message': 'Failed to create/update vendor profile'}, status=status.HTTP_400_BAD_REQUEST)
 
-        
         serializer = VendorProfileSerializer(profile, data=request.data)
-        
-    
+
+        # Print for debugging
+        print(f'serializer data: {request.data}')
+
         if serializer.is_valid():
-            
             if 'profile_photo' in request.FILES:
                 profile.profile_photo = request.FILES['profile_photo']
 
             serializer.save()
-          
+
+            # Print for debugging
+            print(f'profile saved successfully')
+
             return Response({'message': 'Created/Updated successfully'}, status=status.HTTP_200_OK)
         else:
-           
+            # Print serializer errors for debugging
+            print(f'serializer errors: {serializer.errors}')
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AuthenticatedVendorProfile(APIView):
     permission_classes = [IsAuthenticated]

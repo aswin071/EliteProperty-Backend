@@ -143,7 +143,7 @@ class Verify_otpView(APIView):
 
         if stored_otp == check_otp:
             user.is_verified = True
-            user.otp = ""  # Clear the OTP
+            user.otp = ""  
             user.save()
 
             return Response(

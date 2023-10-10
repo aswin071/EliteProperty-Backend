@@ -18,6 +18,7 @@ from datetime import date
 from .signals import my_signal
 from django.core.mail import send_mail
 from django.dispatch import receiver
+from user.signals import property_interest_signal
 
 
 class InitiatePaymentView(APIView):
@@ -207,6 +208,8 @@ class RentBookingView(APIView):
                     payment_status=False,
                 )
                 new_booking.save()
+                property_interest_signal.send(sender=RentBooking, booking=new_booking)
+
                 print(f"Step 5: New booking created: {new_booking}")
 
                 
@@ -379,6 +382,8 @@ def send_real_estate_notification(sender, booking, **kwargs):
     user_subject = "Booking Confirmation"
     user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed.\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 
+   
+
     # Send an email to the user
     send_mail(
         user_subject,
@@ -386,22 +391,27 @@ def send_real_estate_notification(sender, booking, **kwargs):
         config('EMAIL_HOST_USER'),  
         [booking.user.email],
         fail_silently=False,  )
+
+  
 
 
 @receiver(my_signal)
 def send_real_estate_notification_for_rentproperty(sender, booking, **kwargs):
-    # Define the URLs and email subjects/messages
+    
     user_redirect = "http://localhost:3000/my-bookings"  # Replace with your actual URL
     user_subject = "Booking Confirmation"
     user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed for the following dates:\n\nCheck-In Date: {booking.check_in_date}\nCheck-Out Date: {booking.check_out_date}\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 
-    # Send an email to the user
+    
+
+   
     send_mail(
         user_subject,
         user_message,
         config('EMAIL_HOST_USER'),  
         [booking.user.email],
         fail_silently=False,  )
+    
 
 
 @receiver(my_signal)
@@ -409,7 +419,9 @@ def send_vendor_notification(sender, booking, **kwargs):
     # Define the URLs and email subjects/messages
     user_redirect = "http://localhost:3000/my-bookings"  # Replace with your actual URL
     user_subject = "Booking Confirmation"
-    user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed for the following dates:\n\nCheck-In Date: {booking.check_in_date}\nCheck-Out Date: {booking.check_out_date}\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
+    user_message = f'Dear valued customer,\n\nThank you for booking a property with us.\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
+
+   
 
     # Send an email to the user
     send_mail(
@@ -418,3 +430,23 @@ def send_vendor_notification(sender, booking, **kwargs):
         config('EMAIL_HOST_USER'),  
         [booking.user.email],
         fail_silently=False,  )
+
+    
+@receiver(property_interest_signal)
+def send_vendor_rent_notification(sender, booking, **kwargs):
+    # Define the message to send to the vendor
+    vendor_message = f'New booking arrived for your property "{booking.property.title}"'
+
+    # Send a message to the vendor
+    send_mail(
+        "New Booking Notification",
+        vendor_message,
+        settings.EMAIL_HOST_USER,
+        [booking.property.vendor.email],
+        fail_silently=False,
+    )
+
+
+
+
+

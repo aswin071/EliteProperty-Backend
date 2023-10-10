@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from accounts.models import Account
+from django.db import IntegrityError
+from django.conf import settings
 import pdfkit
 from django.template.loader import render_to_string
 from .models import UserProfile
@@ -14,6 +16,10 @@ from buyproperty.models import Interest,PropertyBooking
 from buyproperty.serializers import interestModelSerializer,InterestPropertySerializer,RentForBookingSerializer,RentBookingSerializer,RentPropertyBookingSerializer,PropertyBookingSerializer,PropertyTransactionSerializer
 from buyproperty.models import RentBooking,RentPropertyBooking
 from django.shortcuts import get_object_or_404
+from .signals import property_interest_signal
+from django.core.mail import send_mail
+from django.dispatch import receiver
+
 # Create your views here.
 
 
@@ -97,19 +103,22 @@ class BookingRequestView(APIView):
         property_id = request.data.get('property_id')
 
         try:
-            
             interest, created = Interest.objects.get_or_create(user=user, property_id=property_id)
 
             if created:
                 interest.is_interested = True
                 interest.save()
                 
+                print("Interest created and saved.")
 
+            property_interest_signal.send(sender=Interest, booking=interest)
+
+            print("Signal sent.")
+                
             return Response({'message': ' Request sent successfully.You can see your Updates on your Profile'}, status=status.HTTP_200_OK)
-        except Exception as e:
-         
+        except IntegrityError as e:
+            print(f"IntegrityError: {str(e)}")
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 #PropertyDetailsInProfile
 
@@ -122,70 +131,6 @@ class PropertyDetailsProfileView(APIView):
         serializer = InterestPropertySerializer(request_details, many=True)
             
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-# class GetUserPropertyBookings(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def get(self, request):
-#         user = request.user  # Get the current authenticated user
-#         user_property_bookings = PropertyBooking.objects.filter(user=user)
-#         serializer = PropertyBookingSerializer(user_property_bookings, many=True)
-        
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# class GetUserPropertyBookings(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def get(self, request):
-#         user = request.user  # Get the current authenticated user
-        
-#         # Fetch property bookings related to the particular user
-#         user_property_bookings = PropertyBooking.objects.filter(user=user)
-#         booking_serializer = PropertyBookingSerializer(user_property_bookings, many=True)
-        
-       
-#         property_id = 21  # Replace with the desired property_id
-#         property_details = Property.objects.get(pk=property_id)
-#         property_serializer = SinglePropertySerializer(property_details)
-        
-#         response_data = {
-#             "property_booking": booking_serializer.data,
-#             "property_details": property_serializer.data
-#         }
-        
-#         return Response(response_data, status=status.HTTP_200_OK)
-
-# class GetUserPropertyBookings(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def get(self, request, *args, **kwargs):
-#         user = request.user  # Get the current authenticated user
-        
-#         try:
-#             # Fetch property bookings related to the particular user
-#             user_property_bookings = PropertyBooking.objects.filter(user=user)
-            
-#             # Serialize the property booking details
-#             property_booking_serializer = PropertyBookingSerializer(user_property_bookings, many=True)
-            
-#             # Extract property_ids from user_property_bookings
-#             property_ids = [booking.property_id for booking in user_property_bookings]
-            
-#             # Fetch property details for the property_ids
-#             property_details = Property.objects.filter(id__in=property_ids)
-            
-#             # Serialize the property details
-#             property_serializer = SinglePropertySerializer(property_details, many=True)
-            
-#             response_data = {
-#                 "property_booking": property_booking_serializer.data,
-#                 "property_details": property_serializer.data
-#             }
-            
-#             return Response(response_data, status=status.HTTP_200_OK)
-#         except Exception as e:
-#             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class GetUserPropertyBookings(APIView):
@@ -223,52 +168,14 @@ class GetUserPropertyBookings(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# class GetUserPropertyBookings(APIView):
-#     permission_classes = [IsAuthenticated]
 
-#     def get(self, request):
-#         user = request.user  # Get the current authenticated user
-
-#         # Fetch all property booking details related to the particular user
-#         user_property_bookings = PropertyBooking.objects.filter(user=user)
-#         property_booking_serializer = PropertyBookingSerializer(user_property_bookings, many=True)
-
-#         return Response(property_booking_serializer.data, status=status.HTTP_200_OK)
-
-
-# class PropertyPaymentDetails(APIView):
-
-#     permission_classes = [IsAuthenticated]
-    
-#     def get(self, request, interest_id):
-
-#         try:
-            
-#             interest = Interest.objects.get(pk=interest_id)
-#             print(interest)
-#             property = interest.property
-
-            
-#             serializer = SingleRequestPropertySerializer(interest)
-
-#             response_data = {
-#                 'message': 'Property found',
-#                 'propertyData': serializer.data,
-#             }
-
-#             return Response(response_data, status=status.HTTP_200_OK)
-
-#         except Interest.DoesNotExist:
-#             return Response({'message': 'Interest not found'}, status=status.HTTP_404_NOT_FOUND)
-#         except Property.DoesNotExist:
-#             return Response({'message': 'Property not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class PropertyPaymentDetails(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, property_id):
         try:
-            # Retrieve interest data for the given property_id
+            
             interest = Interest.objects.get(property_id=property_id)
             property = interest.property
 
@@ -374,3 +281,50 @@ class UserSaleBookings(APIView):
         ]
         
         return Response(combined_data, status=status.HTTP_200_OK)
+
+
+@receiver(property_interest_signal)
+def send_vendor_sale_notification(sender, booking, **kwargs):
+    # Define the URLs and email subjects/messages
+    vendor_redirect = "http://localhost:3000/vendor/property/inquiries"
+    vendor_subject = "New Booking Notification"
+    vendor_message = (
+        f'Hello, you have a new booking for your property "{booking.property.title}".\n\n'
+        f'Please log in to your vendor account to manage this booking and respond to the customer.\n\n'
+        f'You can view and manage the booking by clicking on the following link:\n\n'
+        f'{vendor_redirect}\n\n'
+        f'Best regards,\nYour Real Estate Team'
+    )
+
+    # Send an email to the vendor
+    send_mail(
+        vendor_subject,
+        vendor_message,
+        settings.EMAIL_HOST_USER,
+        [booking.property.vendor.email],
+        fail_silently=False,
+    )
+
+
+@receiver(property_interest_signal)
+def send_vendor_rent_notification(sender, booking, **kwargs):
+    # Define the URLs and email subjects/messages
+    vendor_redirect = "http://localhost:3000/vendor/property/inquiries"
+    vendor_subject = "New Booking Notification"
+    vendor_message = (
+        f'Hello, you have a new booking for your property "{booking.property.title}".\n\n'
+        f'Please log in to your vendor account to manage this booking and respond to the customer.\n\n'
+        f'You can view and manage the booking by clicking on the following link:\n\n'
+        f'{vendor_redirect}\n\n'
+        f'Best regards,\nYour Real Estate Team'
+    )
+
+    # Send an email to the vendor
+    send_mail(
+        vendor_subject,
+        vendor_message,
+        settings.EMAIL_HOST_USER,
+        [booking.property.vendor.email],
+        fail_silently=False,
+    )
+    

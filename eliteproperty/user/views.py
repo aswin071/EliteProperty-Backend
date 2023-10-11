@@ -29,7 +29,7 @@ class UserProfileView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            print(request.data)
+            
             profile = UserProfile.objects.get(user=request.user)
             serializer = UserProfileSerializer(profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -109,15 +109,15 @@ class BookingRequestView(APIView):
                 interest.is_interested = True
                 interest.save()
                 
-                print("Interest created and saved.")
+                
 
             property_interest_signal.send(sender=Interest, booking=interest)
 
-            print("Signal sent.")
+            
                 
             return Response({'message': ' Request sent successfully.You can see your Updates on your Profile'}, status=status.HTTP_200_OK)
         except IntegrityError as e:
-            print(f"IntegrityError: {str(e)}")
+            
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 #PropertyDetailsInProfile
@@ -202,18 +202,16 @@ class CheckoutForRentProperty(APIView):
             # Retrieve the property
             property = get_object_or_404(Property, id=property_id)
             
-            print(f"Property retrieved: {property}")
 
-            # Check if there are any existing bookings for the same property and user
             existing_bookings = RentBooking.objects.filter(
                 property=property,
                 user=request.user,
             )
             
-            print(f"Existing bookings: {existing_bookings}")
+            
 
             if existing_bookings.exists():
-                # Bookings exist for the same property and user
+                
                 serializer = RentForBookingSerializer(existing_bookings, many=True)
                 response_data = {
                     'message': 'Property found',
@@ -221,11 +219,10 @@ class CheckoutForRentProperty(APIView):
                 }
                 return Response(response_data, status=status.HTTP_200_OK)
             else:
-                # No bookings found for the same property and user
+                
                 return Response({'message': 'Rent details not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            # Handle any exceptions that occur during the request processing
-            print(f"Error: {str(e)}")
+           
             return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -285,7 +282,7 @@ class UserSaleBookings(APIView):
 
 @receiver(property_interest_signal)
 def send_vendor_sale_notification(sender, booking, **kwargs):
-    # Define the URLs and email subjects/messages
+    
     vendor_redirect = "http://localhost:3000/vendor/property/inquiries"
     vendor_subject = "New Booking Notification"
     vendor_message = (
@@ -296,7 +293,7 @@ def send_vendor_sale_notification(sender, booking, **kwargs):
         f'Best regards,\nYour Real Estate Team'
     )
 
-    # Send an email to the vendor
+   
     send_mail(
         vendor_subject,
         vendor_message,
@@ -308,7 +305,7 @@ def send_vendor_sale_notification(sender, booking, **kwargs):
 
 @receiver(property_interest_signal)
 def send_vendor_rent_notification(sender, booking, **kwargs):
-    # Define the URLs and email subjects/messages
+    
     vendor_redirect = "http://localhost:3000/vendor/property/inquiries"
     vendor_subject = "New Booking Notification"
     vendor_message = (
@@ -319,7 +316,7 @@ def send_vendor_rent_notification(sender, booking, **kwargs):
         f'Best regards,\nYour Real Estate Team'
     )
 
-    # Send an email to the vendor
+    
     send_mail(
         vendor_subject,
         vendor_message,

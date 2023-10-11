@@ -41,26 +41,21 @@ class VendorProfileView(APIView):
         try:
             profile, created = VendorProfile.objects.get_or_create(vendor=request.user)
 
-            # Print for debugging
-            print(f'profile: {profile}')
-            print(f'created: {created}')
+           
 
             user = Account.objects.get(email=request.user)
             user.is_profile = True
             user.save()
 
-            # Print for debugging
-            print(f'user: {user}')
+
 
         except Exception as e:
-            # Print the exception for debugging
-            print(f'Exception: {e}')
+
             return Response({'message': 'Failed to create/update vendor profile'}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = VendorProfileSerializer(profile, data=request.data)
 
-        # Print for debugging
-        print(f'serializer data: {request.data}')
+
 
         if serializer.is_valid():
             if 'profile_photo' in request.FILES:
@@ -68,13 +63,11 @@ class VendorProfileView(APIView):
 
             serializer.save()
 
-            # Print for debugging
-            print(f'profile saved successfully')
+
 
             return Response({'message': 'Created/Updated successfully'}, status=status.HTTP_200_OK)
         else:
-            # Print serializer errors for debugging
-            print(f'serializer errors: {serializer.errors}')
+
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -117,7 +110,7 @@ class PropertyInquiriesView(APIView):
         
         interests = Interest.objects.filter(property_id=property_id)
 
-        # Serialize the interests to include user details
+
         serializer = InterestSerializer(interests, many=True)
 
         return Response({'inquiries': serializer.data}, status=status.HTTP_200_OK)
@@ -135,7 +128,7 @@ class PropertyInquiriesView(APIView):
 
             interest.property_status = property_status
 
-            # Only update the deposit amount if property_status is not 'sold'
+ 
             if property_status != 'sold':
                 interest.initial_deposit = deposit_amount
 
@@ -197,16 +190,16 @@ class UpdateRentPaymentStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, booking_id):
-        print('ID:', booking_id)
+        
         property_instance = get_object_or_404(RentPropertyBooking, pk=booking_id)
 
         new_status = request.data.get('status')
-        print(new_status)
+        
 
         if new_status in dict(RentPropertyBooking.STATUS_CHOICES):
             property_instance.status = new_status
             property_instance.save()
-            print('yes')
+            
             return Response({'message': 'Property payment status updated successfully.'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid status choice.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -254,7 +247,7 @@ class SaletNetAmount(APIView):
             deposit_serializer = PropertyTransactionSerializer(deposit_data, many=True)
             commission_serializer = AdminPaymentviewSerializer(commission_data, many=True)
 
-            # Create the response data dictionary
+           
             response_data = {
                 'deposit_total': deposit_total,
                 'commission_total': commission_total,
@@ -263,7 +256,7 @@ class SaletNetAmount(APIView):
                 'commission_details': commission_serializer.data,
             }
 
-            # Return the response
+            
             return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -276,27 +269,27 @@ class RentNetAmount(APIView):
 
     def get(self, request):
         try:
-            # Get the authenticated vendor
+            
             vendor = self.request.user
 
-            # Calculate rent_total by summing rent_amounts for the vendor's properties
+            
             rent_total = RentPropertyBooking.objects.filter(property__vendor=vendor).aggregate(total_rent=Sum('rent_amount'))['total_rent'] or 0
 
-            # Calculate commission_total by summing the commission amounts for the vendor's properties
+            
             commission_total = AdminPayment.objects.filter(property__vendor=vendor).aggregate(total_commission=Sum('amount'))['total_commission'] or 0
 
-            # Calculate net_amount by adding rent_total and commission_total
+            
             net_amount = rent_total + commission_total
 
-            # Query deposit_data and commission_data
+           
             deposit_data = RentPropertyBooking.objects.filter(property__vendor=vendor)
             commission_data = AdminPayment.objects.filter(property__vendor=vendor)
 
-            # Serialize deposit_data and commission_data
+            
             deposit_serializer = RentPropertyHistorySerializer(deposit_data, many=True)
             commission_serializer = AdminPaymentviewSerializer(commission_data, many=True)
 
-            # Create the response data dictionary
+            
             response_data = {
                 'rent_total': rent_total,
                 'commission_total': commission_total,
@@ -305,7 +298,7 @@ class RentNetAmount(APIView):
                 'commission_details': commission_serializer.data,
             }
 
-            # Return the response
+            
             return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:

@@ -19,7 +19,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             await self.accept()
         except Exception as e:
-            print(f"Error in connect: {str(e)}")
+            
             await self.close()
 
 

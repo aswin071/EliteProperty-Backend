@@ -35,16 +35,12 @@ class InitiatePaymentView(APIView):
             amount_in_paise = int(float(deposit_amount) * 100)
             commission_amount = int(float(deposit_amount))
 
-            print(f"Property ID: {property_id}")
-            print(f"Deposit Amount: {deposit_amount}")
-            print(f"Amount in Paise: {amount_in_paise}")
-            print(f"Commission Amount: {commission_amount}")
+            
 
             RAZORPAY_KEY_ID = settings.RAZORPAY_KEY_ID
             RAZORPAY_KEY_SECRET = settings.RAZORPAY_KEY_SECRET
             
-            print(f"Razorpay Key ID: {RAZORPAY_KEY_ID}")
-            print(f"Razorpay Key Secret: {RAZORPAY_KEY_SECRET}")
+           
 
             client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
@@ -52,9 +48,7 @@ class InitiatePaymentView(APIView):
             admin_fee = (0.15 * amount_in_paise) / 100
             deducted_amount = commission_amount - admin_fee 
 
-            print(f"Admin Fee: {admin_fee}")
-            print(f"Deducted Amount: {deducted_amount}")
-
+            
             order_response = client.order.create({
                 'amount': amount_in_paise,
                 'currency': 'INR',
@@ -62,7 +56,7 @@ class InitiatePaymentView(APIView):
             })
             order_id = order_response["id"]
 
-            print(f"Order ID: {order_id}")
+           
 
             order = PropertyBooking.objects.create(
                 user=user,
@@ -89,7 +83,7 @@ class InitiatePaymentView(APIView):
         except Property.DoesNotExist:
             return Response({"error": "Property not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            print(f"Error: {str(e)}")
+            
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -100,7 +94,7 @@ class InitiatePaymentView(APIView):
 class SuccessPaymentView(APIView):
 
     def post(self, request, format=None):
-        print("Request Data:", request.data)
+        
         from rest_framework import status
         from rest_framework.response import Response
         from rest_framework.permissions import IsAuthenticated
@@ -111,7 +105,7 @@ class SuccessPaymentView(APIView):
         permission_classes = [IsAuthenticated]
 
         data = request.data.get("data", {})
-        print("Extracted Data:", data) 
+         
         
         ord_id = ""
         raz_pay_id = ""
@@ -128,9 +122,7 @@ class SuccessPaymentView(APIView):
         raz_pay_id = data.get("razorpay_payment_id")
         payment_id = raz_pay_id
 
-        print("Order ID:", ord_id)
-        print("Razorpay Payment ID:", raz_pay_id)
-        print("Razorpay Signature:", raz_signature)
+        
 
         PUBLIC_KEY = "rzp_test_mQPTW9W3qUgwIE"
         SECRET_KEY = "jUdfHmvTQdduTjUBOraTxlhz"
@@ -178,12 +170,12 @@ class RentBookingView(APIView):
 
             
             if check_in_date >= check_out_date:
-                print("Step 1: Invalid date range.")
+                
                 return Response({'message': 'Invalid date range.'}, status=status.HTTP_400_BAD_REQUEST)
 
             
             property = get_object_or_404(Property, id=property_id)
-            print(f"Step 2: Property retrieved: {property}")
+            
 
            
             existing_bookings = RentBooking.objects.filter(
@@ -191,12 +183,12 @@ class RentBookingView(APIView):
                 check_in_date__lte=check_out_date,
                 check_out_date__gte=check_in_date,
             )
-            print(f"Step 3: Existing bookings: {existing_bookings}")
+            
 
             if existing_bookings.exists():
                 
                 error_message = f"Property is not available from {check_in_date} to {check_out_date}. Please select other dates."
-                print(f"Step 4: {error_message}")
+                
                 return Response({'message': error_message})
             else:
                 
@@ -210,7 +202,7 @@ class RentBookingView(APIView):
                 new_booking.save()
                 property_interest_signal.send(sender=RentBooking, booking=new_booking)
 
-                print(f"Step 5: New booking created: {new_booking}")
+                
 
                 
                 serializer = RentBookingSerializer(new_booking)
@@ -218,7 +210,7 @@ class RentBookingView(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
            
-            print(f"Step 7: Error: {e}")
+           
             return Response({'message': 'An error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -237,10 +229,7 @@ class InitiateRentPaymentView(APIView):
             check_in_date = request.data.get('check_in_date')
             check_out_date = request.data.get('check_out_date')
 
-            print(f"Property ID: {property_id}")
-            print(f"Rent Amount: {rent_amount}")
-            print(f"Check-in Date: {check_in_date}")
-            print(f"Check-out Date: {check_out_date}")
+            
 
             amount_in_paise = int(float(rent_amount) * 100)
             commission_amount=int(float(rent_amount))
@@ -248,8 +237,7 @@ class InitiateRentPaymentView(APIView):
             RAZORPAY_KEY_ID = settings.RAZORPAY_KEY_ID
             RAZORPAY_KEY_SECRET = settings.RAZORPAY_KEY_SECRET
 
-            print(f"Razorpay Key ID: {RAZORPAY_KEY_ID}")
-            print(f"Razorpay Key Secret: {RAZORPAY_KEY_SECRET}")
+            
 
             client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
             
@@ -298,7 +286,7 @@ class InitiateRentPaymentView(APIView):
         except Property.DoesNotExist:
             return Response({"error": "Property not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            print(f"Error: {str(e)}")
+            
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -307,12 +295,12 @@ class SuccessRentPaymentView(APIView):
     
 
     def post(self, request, format=None):
-        print("Request Data:", request.data)  
+         
 
         permission_classes = [IsAuthenticated]
 
         data = request.data.get("data", {})
-        print("Extracted Data:", data)  
+         
         
         ord_id = ""
         raz_pay_id = ""
@@ -329,9 +317,7 @@ class SuccessRentPaymentView(APIView):
         raz_pay_id = data.get("razorpay_payment_id")
         payment_id = raz_pay_id
 
-        print("Order ID:", ord_id)
-        print("Razorpay Payment ID:", raz_pay_id)
-        print("Razorpay Signature:", raz_signature)
+        
 
         PUBLIC_KEY = "rzp_test_mQPTW9W3qUgwIE"
         SECRET_KEY = "jUdfHmvTQdduTjUBOraTxlhz"
@@ -339,15 +325,15 @@ class SuccessRentPaymentView(APIView):
         client = razorpay.Client(auth=(PUBLIC_KEY, SECRET_KEY))
 
         check = client.utility.verify_payment_signature(data)
-        print("Payment Verification Check Result:", check)
+        
 
         if check:
             try:
                 order = RentPropertyBooking.objects.get(booking_order_id=ord_id)
-                print("Found Order:", order)
+                
 
                 rent = RentBooking.objects.get(property=order.property, user=request.user)
-                print("Found Rent:", rent)
+                
 
                 rent.payment_status = True
                 rent.save()
@@ -378,7 +364,7 @@ class SuccessRentPaymentView(APIView):
 @receiver(my_signal)
 def send_real_estate_notification(sender, booking, **kwargs):
     # Define the URLs and email subjects/messages
-    user_redirect = "http://localhost:3000/my-bookings"  # Replace with your actual URL
+    user_redirect = "http://localhost:3000/my-bookings"  
     user_subject = "Booking Confirmation"
     user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed.\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 
@@ -398,7 +384,7 @@ def send_real_estate_notification(sender, booking, **kwargs):
 @receiver(my_signal)
 def send_real_estate_notification_for_rentproperty(sender, booking, **kwargs):
     
-    user_redirect = "http://localhost:3000/my-bookings"  # Replace with your actual URL
+    user_redirect = "http://localhost:3000/my-bookings"  
     user_subject = "Booking Confirmation"
     user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed for the following dates:\n\nCheck-In Date: {booking.check_in_date}\nCheck-Out Date: {booking.check_out_date}\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 
@@ -417,7 +403,7 @@ def send_real_estate_notification_for_rentproperty(sender, booking, **kwargs):
 @receiver(my_signal)
 def send_vendor_notification(sender, booking, **kwargs):
     # Define the URLs and email subjects/messages
-    user_redirect = "http://localhost:3000/my-bookings"  # Replace with your actual URL
+    user_redirect = "http://localhost:3000/my-bookings"  
     user_subject = "Booking Confirmation"
     user_message = f'Dear valued customer,\n\nThank you for booking a property with us.\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 

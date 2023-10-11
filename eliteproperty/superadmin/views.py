@@ -10,13 +10,13 @@ from property.models import Property
 from property.serializers import AllPropertySerializer
 from .models import AdminPayment
 from .serializers import AdminPaymentSerializer
-# Create your views here.
+
 
 class VendorRegistrationApprovalView(APIView):
     def post(self, request, vendor_id):
         try:
             profile = VendorProfile.objects.get(vendor_id=vendor_id)
-            profile.is_registered = True  # Approve registration
+            profile.is_registered = True 
             profile.save()
             return Response({'message': 'Registration approved'}, status=status.HTTP_200_OK)
         except VendorProfile.DoesNotExist:
@@ -81,9 +81,9 @@ class AdminTransactionDetails(APIView):
 
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        # Fetch all property data
+        
         transaction_details = AdminPayment.objects.all()
-        # Serialize the property data using your serializer (PropertySerializer)
+        
         serializer = AdminPaymentSerializer(transaction_details, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

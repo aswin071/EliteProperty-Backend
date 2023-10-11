@@ -3,7 +3,7 @@ from accounts.models import Account
 from property.models import Property
 from datetime import date
 
-# Create your models here.
+
 
 class AdminPayment(models.Model):
     vendor = models.ForeignKey(Account, on_delete=models.CASCADE)

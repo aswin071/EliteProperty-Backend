@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import UserProfile
 
-# Register your models here.
+
 
 class ProfileAdmin(UserAdmin):
     list_display = ('id','profile_photo', 'about', 'date_of_birth', 'state', 'country')

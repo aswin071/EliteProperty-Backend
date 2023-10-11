@@ -6,15 +6,12 @@ import random
 
 
 def send_otp(username, email):
-    # Generating OTP and Sending Email
+   
     otp_no = str(random.randint(1000, 9999))
     
-    # Store the OTP in the database
     user = Account.objects.get(email=email)
     user.otp = otp_no
     user.save()
-
-    print(f"Generated OTP for {username}: {otp_no}")
     message = f"""Hi {username},
 
 Thank you for registering with EliteProperty.

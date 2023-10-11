@@ -63,9 +63,6 @@ class SignUpView(APIView):
                 username = data.get('username')
                 send_otp(username, email)
 
-            else:
-                print('neither vendor nor user')
-
             response = {
                 'message': 'User Created Successfully',
                 'otp': True
@@ -73,14 +70,13 @@ class SignUpView(APIView):
             return Response(data=response, status=status.HTTP_201_CREATED)
 
         else:
-            print(serializer.errors)
+            
             error_message = "Error occurred. Please check your inputs"
             if Account.objects.filter(email=data.get('email')).exists():
                 error_message = "Email is already taken"
             if Account.objects.filter(phone_number=data.get('phone_number')).exists():
                 error_message = "Phone number already taken"
             return Response(data=error_message, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class LoginView(APIView):
@@ -155,23 +151,3 @@ class Verify_otpView(APIView):
                 {"Failed": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-
-# class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-#     @classmethod
-#     def get_token(cls, user):
-#         token = super().get_token(user)
-
-#         # Add custom claims
-#         token['username'] = user.username
-#         return token
-
-# class MyTokenObtainPairView(TokenObtainPairView):
-#     serializer_class = MyTokenObtainPairSerializer
-
-# @api_view(['GET'])
-# def getRoutes(request):
-#     routes=[
-#         '/api/token',
-#         '/api/token/refresh'
-#     ]
-#     return Response(routes)

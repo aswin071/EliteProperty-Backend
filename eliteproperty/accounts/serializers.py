@@ -13,14 +13,14 @@ class SignUpSerializer(serializers.ModelSerializer):
         model = Account
         fields = ('first_name', 'last_name', 'email', 'username', 'phone_number', 'password')
 
-    # Checking Email Already Exist
+ 
     def validate(self, attrs):
         email_exist = Account.objects.filter(email=attrs['email']).exists()
         if email_exist:
             raise serializers.ValidationError('This Email is already Taken!')
         return super().validate(attrs)
 
-    # Checking Valid Email
+   
     def validate_email(self, value):
         try:
             validate_email(value)
@@ -29,7 +29,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         
         return value
 
-    # Creating and Saving user
+    
     def create(self, validated_data):
         password = validated_data.pop('password')  # Password hashing
 

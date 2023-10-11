@@ -18,7 +18,7 @@ class AddPropertyView(APIView):
     def get(self, request, format=None):
         try:
             
-            # Retrieve and serialize properties based on your logic
+           
             properties = Property.objects.filter(vendor=request.user)
             serializer = AllPropertySerializer(properties, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)

@@ -2,7 +2,6 @@ from django.db import models
 from vendor.models import VendorProfile
 from django.utils.timezone import now
 from accounts.models import Account
-# Create your models here.
 
 class Property(models.Model):
     PROPERTY_TYPES = (

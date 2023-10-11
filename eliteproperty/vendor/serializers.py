@@ -2,8 +2,7 @@ from rest_framework import serializers
 from accounts.models import Account
 from accounts.serializers import UserViewSerializer
 from .models import VendorProfile
-#from property.serializers import AllPropertySerializer
-#rom property.models import Property
+
 
 
 class VendorSerializer(serializers.ModelSerializer):

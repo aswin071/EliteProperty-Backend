@@ -143,6 +143,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'eliteproperty.wsgi.application'
+ASGI_APPLICATION = "eliteproperty.asgi.application"
 
 
 # Database

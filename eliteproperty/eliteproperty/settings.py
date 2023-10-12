@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from decouple import config
-
+import cloudinary_storage
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'cloudinary',
 
     'rest_framework',
     'corsheaders',
@@ -223,4 +224,11 @@ EMAIL_USE_TLS = True
 
 RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET')
+
+CLOUDINARY_STORAGE = {
+'CLOUD_NAME': 'df0zplobp',
+'API_KEY': '574194622555792',
+'API_SECRET': 'Dwym_sh5xwA2TwLRpVLtuE30nyM',
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 

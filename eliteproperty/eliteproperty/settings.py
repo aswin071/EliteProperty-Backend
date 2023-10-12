@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import secrets
 from pathlib import Path
 import os
 from datetime import timedelta
@@ -162,10 +162,7 @@ DATABASES = {
 
 import dj_database_url
 
-DATABASES ={
-    "default" :dj_database_url.parse(config("DATABASE_URL"))
-}
-
+DATABASES = {"default": dj_database_url.parse(config("DATABASE_URL"))}
 
 
 # Password validation

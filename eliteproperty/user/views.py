@@ -283,7 +283,7 @@ class UserSaleBookings(APIView):
 @receiver(property_interest_signal)
 def send_vendor_sale_notification(sender, booking, **kwargs):
     
-    vendor_redirect = "http://localhost:3000/vendor/property/inquiries"
+    vendor_redirect = "https://elite-property.vercel.app/vendor/property/inquiries"
     vendor_subject = "New Booking Notification"
     vendor_message = (
         f'Hello, you have a new booking for your property "{booking.property.title}".\n\n'
@@ -306,7 +306,7 @@ def send_vendor_sale_notification(sender, booking, **kwargs):
 @receiver(property_interest_signal)
 def send_vendor_rent_notification(sender, booking, **kwargs):
     
-    vendor_redirect = "http://localhost:3000/vendor/property/inquiries"
+    vendor_redirect = "https://elite-property.vercel.app/vendor/property/inquiries"
     vendor_subject = "New Booking Notification"
     vendor_message = (
         f'Hello, you have a new booking for your property "{booking.property.title}".\n\n'

@@ -364,7 +364,7 @@ class SuccessRentPaymentView(APIView):
 @receiver(my_signal)
 def send_real_estate_notification(sender, booking, **kwargs):
     # Define the URLs and email subjects/messages
-    user_redirect = "http://localhost:3000/my-bookings"  
+    user_redirect = "https://elite-property.vercel.app/my-bookings"  
     user_subject = "Booking Confirmation"
     user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed.\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 
@@ -384,7 +384,7 @@ def send_real_estate_notification(sender, booking, **kwargs):
 @receiver(my_signal)
 def send_real_estate_notification_for_rentproperty(sender, booking, **kwargs):
     
-    user_redirect = "http://localhost:3000/my-bookings"  
+    user_redirect = "https://elite-property.vercel.app/my-bookings"  
     user_subject = "Booking Confirmation"
     user_message = f'Dear valued customer,\n\nThank you for booking a property with us. Your booking for {booking.property.title} has been confirmed for the following dates:\n\nCheck-In Date: {booking.check_in_date}\nCheck-Out Date: {booking.check_out_date}\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 
@@ -403,7 +403,7 @@ def send_real_estate_notification_for_rentproperty(sender, booking, **kwargs):
 @receiver(my_signal)
 def send_vendor_notification(sender, booking, **kwargs):
     # Define the URLs and email subjects/messages
-    user_redirect = "http://localhost:3000/my-bookings"  
+    user_redirect = "https://elite-property.vercel.app/my-bookings"  
     user_subject = "Booking Confirmation"
     user_message = f'Dear valued customer,\n\nThank you for booking a property with us.\n\nYou can view and manage your booking by visiting the following link: {user_redirect}.\n\nIf you have any questions or need assistance, please contact our customer support.\n\nBest regards,\nYour Real Estate Team'
 

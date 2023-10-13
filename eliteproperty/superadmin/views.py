@@ -10,6 +10,11 @@ from property.models import Property
 from property.serializers import AllPropertySerializer
 from .models import AdminPayment
 from .serializers import AdminPaymentSerializer
+from accounts.models import Account
+from vendor.models import VendorProfile
+from user.models import UserProfile
+from property.models import Property
+from django.db.models import Sum
 
 
 class VendorRegistrationApprovalView(APIView):
@@ -86,4 +91,35 @@ class AdminTransactionDetails(APIView):
         
         serializer = AdminPaymentSerializer(transaction_details, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AdminDashboard(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            
+            total_user_count = UserProfile.objects.count()
+            total_vendor_count = VendorProfile.objects.count()
+            total_properties =Property.objects.count()
+            total_amount = AdminPayment.objects.aggregate(total_amount=Sum('amount'))['total_amount']
+
+
+            
+            response_data = {
+                'total_user_count': total_user_count,
+                'total_vendor_count': total_vendor_count,
+                'total_properties': total_properties,
+                'total_amount':total_amount
+
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
 

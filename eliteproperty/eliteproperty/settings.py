@@ -103,7 +103,7 @@ SIMPLE_JWT = {
 
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOWED_ORIGINS = [  "http://localhost:3000","https://elite-property-frontend.vercel.app"]
+CORS_ALLOWED_ORIGINS = [  "https://elite-property-frontend.vercel.app"]
    
 
 

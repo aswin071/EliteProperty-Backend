@@ -313,26 +313,42 @@ class VendorDashBoard(APIView):
         try:
             vendor = self.request.user
 
-            # Get the count of properties for the vendor
             property_count = Property.objects.filter(vendor=vendor).count()
 
-            # Get the count of properties categorized by property_type
             rent_count = Property.objects.filter(vendor=vendor, property_type='Rent').count()
+            
             sale_count = Property.objects.filter(vendor=vendor, property_type='Sale').count()
-            sale_bookings = PropertyBooking.objects.filter(vendor=vendor).count()
-            rent_bookings = RentPropertyBooking.objects.filter(vendor=vendor).count()
+            
+            sale_bookings = PropertyBooking.objects.filter(property__vendor=vendor).count()
+            
+            rent_bookings = RentPropertyBooking.objects.filter(property__vendor=vendor).count()
 
-            # You can include more data in the response as needed
+            rent_total = RentPropertyBooking.objects.filter(property__vendor=vendor).aggregate(total_rent=Sum('rent_amount'))['total_rent'] or 0
+
+            
+            commission_total = AdminPayment.objects.filter(property__vendor=vendor).aggregate(total_commission=Sum('amount'))['total_commission'] or 0
+
+            
+            net_amount = rent_total + commission_total
+
+           
+ 
+
+
             response_data = {
                 'property_count': property_count,
                 'rent_count': rent_count,
                 'sale_count': sale_count,
-                'sale_bookings':sale_bookings,
-                'rent_bookings':rent_bookings,
-               
+                'sale_bookings': sale_bookings,
+                'rent_bookings': rent_bookings,
+                'rent_total':rent_total,
+                'commission_total':commission_total,
+                'net_amount':net_amount
+
             }
 
             return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
+
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

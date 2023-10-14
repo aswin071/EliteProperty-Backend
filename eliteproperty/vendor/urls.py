@@ -6,7 +6,8 @@ from .views import (VendorProfileView,VendorProfileListView,VendorHomeView,
                         UpdateRentPaymentStatusView,
                         UpdateSalePaymentStatusView,
                         AuthenticatedVendorProfile,
-                        SaletNetAmount,RentNetAmount)
+                        SaletNetAmount,RentNetAmount,
+                        VendorDashBoard)
 
 urlpatterns = [
     path('vendor-createprofile/', VendorProfileView.as_view(), name='create-vendor-profile'),
@@ -22,7 +23,8 @@ urlpatterns = [
     path('update-payment-status/<int:booking_id>/', UpdateRentPaymentStatusView.as_view(), name='update-payment-status'),
     path('update-sale/payment-status/<int:booking_id>/', UpdateSalePaymentStatusView.as_view(), name='update-payment-status'),
     path('sale/netamount/', SaletNetAmount.as_view(), name='sale/netamount'),
-    path('rent/netamount/', RentNetAmount.as_view(), name='sale/netamount'),
+    path('rent/netamount/', RentNetAmount.as_view(), name='rent/netamount'),
+    path('dashboard/', VendorDashBoard.as_view(), name='dashboard'),
 
 
 ]

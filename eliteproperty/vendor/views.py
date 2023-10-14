@@ -305,3 +305,34 @@ class RentNetAmount(APIView):
             error_message = str(e)
             return Response({'error': error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+class VendorDashBoard(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            vendor = self.request.user
+
+            # Get the count of properties for the vendor
+            property_count = Property.objects.filter(vendor=vendor).count()
+
+            # Get the count of properties categorized by property_type
+            rent_count = Property.objects.filter(vendor=vendor, property_type='Rent').count()
+            sale_count = Property.objects.filter(vendor=vendor, property_type='Sale').count()
+            sale_bookings = PropertyBooking.objects.filter(vendor=vendor).count()
+            rent_bookings = RentPropertyBooking.objects.filter(vendor=vendor).count()
+
+            # You can include more data in the response as needed
+            response_data = {
+                'property_count': property_count,
+                'rent_count': rent_count,
+                'sale_count': sale_count,
+                'sale_bookings':sale_bookings,
+                'rent_bookings':rent_bookings,
+               
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
